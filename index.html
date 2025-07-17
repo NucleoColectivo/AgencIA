@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgencIA - Soluciones de IA para PyMEs</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a; /* Tailwind: bg-black/95 */
+            color: #e5e7eb; /* Tailwind: text-gray-200 */
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .section-title {
+            position: relative;
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 0;
+            width: 60%;
+            height: 4px;
+            background-color: #818cf8; /* Tailwind: indigo-400 */
+            border-radius: 9999px;
+        }
+        .cta-button {
+            transition: all 0.3s ease;
+        }
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2), 0 0 15px rgba(129, 140, 248, 0.4);
+        }
+        /* Estilos para Modales de Chatbot */
+        .chat-modal-container {
+            transition: opacity 0.3s ease;
+        }
+        .chat-modal-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .chat-modal-panel {
+            transition: transform 0.3s ease;
+        }
+         .chat-modal-container.hidden .chat-modal-panel {
+            transform: scale(0.95);
+        }
+        .modal-chat-container::-webkit-scrollbar { width: 6px; }
+        .modal-chat-container::-webkit-scrollbar-track { background: #f1f5f9; }
+        .modal-chat-container::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+        .modal-chat-container::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .bot-bubble { background-color: #e2e8f0; color: #1e293b; }
+        .user-bubble { background-color: #6366f1; color: #ffffff; }
+        .action-button {
+            background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;
+            transition: all 0.2s ease-in-out;
+        }
+        .action-button:hover { background-color: #e2e8f0; border-color: #cbd5e1; transform: translateY(-2px); }
+        .dot-flashing {
+            position: relative; width: 10px; height: 10px; border-radius: 5px;
+            background-color: #475569; color: #475569;
+            animation: dotFlashing 1s infinite linear alternate; animation-delay: .5s;
+        }
+        .dot-flashing::before, .dot-flashing::after {
+            content: ''; display: inline-block; position: absolute; top: 0;
+        }
+        .dot-flashing::before {
+            left: -15px; width: 10px; height: 10px; border-radius: 5px;
+            background-color: #475569; color: #475569;
+            animation: dotFlashing 1s infinite alternate; animation-delay: 0s;
+        }
+        .dot-flashing::after {
+            left: 15px; width: 10px; height: 10px; border-radius: 5px;
+            background-color: #475569; color: #475569;
+            animation: dotFlashing 1s infinite alternate; animation-delay: 1s;
+        }
+        @keyframes dotFlashing {
+            0% { background-color: #475569; }
+            50%, 100% { background-color: #cbd5e1; }
+        }
+        /* Botones Flotantes */
+        .floating-buttons-container {
+            position: fixed;
+            bottom: 2.5rem;
+            right: 2.5rem;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .floating-button {
+            width: 60px;
+            height: 60px;
+            color: #FFF;
+            border-radius: 50%;
+            text-align: center;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .floating-button:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <!-- Barra de Navegación -->
+    <nav class="bg-gray-900/70 backdrop-blur-lg shadow-lg p-4 sticky top-0 z-50 border-b border-gray-700/50">
+        <div class="container mx-auto flex justify-between items-center flex-wrap">
+            <a href="#" class="text-2xl font-bold text-white hover:text-indigo-400 transition duration-300">Synerg<span class="gradient-text">IA</span></a>
+            <div class="block lg:hidden">
+                <button id="nav-toggle" class="flex items-center px-3 py-2 border rounded text-gray-200 border-gray-400 hover:text-white hover:border-white">
+                    <svg class="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z"/></svg>
+                </button>
+            </div>
+            <div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden" id="nav-content">
+                <ul class="text-lg lg:flex justify-end flex-1 items-center">
+                    <li class="mt-3 lg:mt-0 lg:ml-6"><a href="#servicios" class="block text-gray-300 hover:text-indigo-400 transition duration-300 py-2">Servicios</a></li>
+                    <li class="mt-3 lg:mt-0 lg:ml-6"><a href="#portafolio" class="block text-gray-300 hover:text-indigo-400 transition duration-300 py-2">Portafolio</a></li>
+                    <li class="mt-3 lg:mt-0 lg:ml-6"><a href="#testimonios" class="block text-gray-300 hover:text-indigo-400 transition duration-300 py-2">Testimonios</a></li>
+                    <li class="mt-3 lg:mt-0 lg:ml-6"><a href="#equipo" class="block text-gray-300 hover:text-indigo-400 transition duration-300 py-2">Equipo</a></li>
+                    <li class="mt-3 lg:mt-0 lg:ml-6"><a href="#nosotros" class="block text-gray-300 hover:text-indigo-400 transition duration-300 py-2">Nosotros</a></li>
+                    <li class="mt-3 lg:mt-0 lg:ml-6"><a href="#contacto" class="block text-white bg-indigo-600 hover:bg-indigo-700 transition duration-300 py-2 px-4 rounded-lg shadow-md cta-button">Contacto</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sección Hero -->
+    <header class="relative text-white text-center shadow-lg h-[80vh] flex items-center justify-center">
+        <div class="absolute inset-0">
+            <img src="https://images.unsplash.com/photo-1534723452862-4c874018d66d?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Fondo de IA abstracto" class="w-full h-full object-cover opacity-20">
+            <div class="absolute inset-0 bg-gray-900/60"></div>
+        </div>
+        <div class="relative z-10 container mx-auto px-4">
+            <h1 class="text-7xl md:text-8xl font-extrabold leading-tight mb-4">
+                Synerg<span class="gradient-text">IA</span>
+            </h1>
+            <p class="text-2xl md:text-3xl mb-6 max-w-3xl mx-auto font-semibold text-gray-200">
+                Soluciones de IA para el Crecimiento de tu PyME
+            </p>
+            <p class="text-lg md:text-xl mb-8 max-w-3xl mx-auto text-gray-300">
+                Transformamos tu negocio con inteligencia artificial, generando soluciones prácticas y resultados tangibles.
+            </p>
+            <a href="#contacto" class="inline-block bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-indigo-700 transition duration-300 cta-button">
+                ¡Impulsa tu Negocio Hoy!
+            </a>
+        </div>
+    </header>
+
+    <main class="bg-gray-900/50">
+        <!-- Sección de Servicios -->
+        <section id="servicios" class="py-16 px-4">
+            <div class="container mx-auto">
+                <h2 class="text-4xl font-bold text-center mb-12 section-title mx-auto w-fit text-white">Nuestros Servicios</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-gray-800 p-8 rounded-lg shadow-lg hover:shadow-indigo-500/20 transition duration-300 transform hover:-translate-y-1 border border-gray-700">
+                        <h3 class="text-2xl font-semibold text-indigo-400 mb-4">Aplicaciones y Marketing con <span class="gradient-text">IA</span></h3>
+                        <p class="text-gray-300 mb-4">Diseñamos chatbots conversacionales y de texto, banners interactivos y páginas web optimizadas con IA para personalización y conversión.</p>
+                        <ul class="list-disc list-inside text-gray-400">
+                            <li>Chatbots inteligentes y personalizados</li>
+                            <li>Banners interactivos dinámicos</li>
+                            <li>Páginas web optimizadas con IA</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-800 p-8 rounded-lg shadow-lg hover:shadow-indigo-500/20 transition duration-300 transform hover:-translate-y-1 border border-gray-700">
+                        <h3 class="text-2xl font-semibold text-indigo-400 mb-4">Creación y Asesoría Empresarial</h3>
+                        <p class="text-gray-300 mb-4">Te ayudamos a construir tu empresa desde cero: logotipos, diseño web, redes sociales y la interconexión de todas tus plataformas digitales.</p>
+                        <ul class="list-disc list-inside text-gray-400">
+                            <li>Diseño de logotipo e identidad de marca</li>
+                            <li>Desarrollo web completo</li>
+                            <li>Integración de plataformas digitales</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-800 p-8 rounded-lg shadow-lg hover:shadow-indigo-500/20 transition duration-300 transform hover:-translate-y-1 border border-gray-700">
+                        <h3 class="text-2xl font-semibold text-indigo-400 mb-4">Talleres y Capacitación en <span class="gradient-text">IA</span></h3>
+                        <p class="text-gray-300 mb-4">Brindamos talleres especializados en IA y emprendimiento, capacitando a tu equipo en el uso de herramientas de IA para fomentar la autonomía.</p>
+                        <ul class="list-disc list-inside text-gray-400">
+                            <li>Fundamentos de IA para negocios</li>
+                            <li>Uso de herramientas de IA generativa</li>
+                            <li>Estrategias de emprendimiento con IA</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Portafolio -->
+        <section id="portafolio" class="py-16 px-4">
+            <div class="container mx-auto">
+                <h2 class="text-4xl font-bold text-center mb-12 section-title mx-auto w-fit text-white">Nuestro Portafolio</h2>
+                <p class="text-center text-lg text-gray-300 mb-10 max-w-3xl mx-auto">
+                    Demostramos nuestra capacidad de transformar ideas en realidades. Aquí algunos de nuestros prototipos y proyectos.
+                </p>
+                
+                <div class="mb-12">
+                    <h3 class="text-3xl font-semibold text-indigo-400 mb-6 text-center">Chatbots Interactivos</h3>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-indigo-500/20 transition duration-300 transform hover:-translate-y-1 border border-gray-700 text-center flex flex-col">
+                            <h4 class="text-xl font-bold text-white mb-2">My Digital Traveler ✈️</h4>
+                            <p class="text-gray-400 mb-4 text-sm flex-grow">Guía para nómadas digitales que buscan libertad financiera, viajes y crecimiento personal con IA.</p>
+                            <div class="mt-auto">
+                                <button onclick="openMyDigitalTravelerModal()" class="w-full bg-cyan-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-cyan-700 transition duration-300 cta-button">Probar Demo</button>
+                            </div>
+                        </div>
+                         <div class="bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-indigo-500/20 transition duration-300 transform hover:-translate-y-1 border border-gray-700 text-center flex flex-col">
+                            <h4 class="text-xl font-bold text-white mb-2">ArquiTek Solutions 🏗️</h4>
+                            <p class="text-gray-400 mb-4 text-sm flex-grow">Asistente técnico para una firma de arquitectura, enfocado en precisión, materiales y ejecución de proyectos.</p>
+                             <div class="mt-auto">
+                                <button onclick="openArquiTekModal()" class="w-full bg-orange-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-orange-700 transition duration-300 cta-button">Probar Demo</button>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-indigo-500/20 transition duration-300 transform hover:-translate-y-1 border border-gray-700 text-center flex flex-col">
+                            <h4 class="text-xl font-bold text-white mb-2">Agente de Ventas <span class="gradient-text">IA</span> 📈</h4>
+                            <p class="text-gray-400 mb-4 text-sm flex-grow">Bot proactivo que guía a clientes, ofrece recomendaciones y ayuda a cerrar ventas.</p>
+                            <div class="mt-auto">
+                                <button onclick="openSalesAgentModal()" class="w-full bg-emerald-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-emerald-700 transition duration-300 cta-button">Probar Demo</button>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-indigo-500/20 transition duration-300 transform hover:-translate-y-1 border border-gray-700 text-center flex flex-col">
+                            <h4 class="text-xl font-bold text-white mb-2">NúcleoBot 🧠</h4>
+                            <p class="text-gray-400 mb-4 text-sm flex-grow">Asistente para guiar, inspirar y facilitar proyectos creativos y comunitarios.</p>
+                            <div class="mt-auto">
+                                <button onclick="openNucleoBotModal()" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300 cta-button">Probar Demo</button>
+                            </div>
+                        </div>
+                         <div class="bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-indigo-500/20 transition duration-300 transform hover:-translate-y-1 border border-gray-700 text-center flex flex-col">
+                            <h4 class="text-xl font-bold text-white mb-2">CosiacaBot 🤠</h4>
+                            <p class="text-gray-400 mb-4 text-sm flex-grow">Chatbot con la personalidad pícara de Cosiaca, para contar chistes, trovas y anécdotas.</p>
+                             <div class="mt-auto">
+                                <button onclick="openCosiacaBotModal()" class="w-full bg-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-purple-700 transition duration-300 cta-button">Probar Demo</button>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-indigo-500/20 transition duration-300 transform hover:-translate-y-1 border border-gray-700 text-center flex flex-col">
+                            <h4 class="text-xl font-bold text-white mb-2">Línea Médica ⚕️</h4>
+                            <p class="text-gray-400 mb-4 text-sm flex-grow">Asistente virtual para agendar citas, consultar servicios y horarios de una línea médica.</p>
+                            <div class="mt-auto">
+                                <button onclick="openLineaMedicaModal()" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 cta-button">Probar Demo</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Testimonios -->
+        <section id="testimonios" class="py-16 px-4">
+            <div class="container mx-auto">
+                <h2 class="text-4xl font-bold text-center mb-12 section-title mx-auto w-fit text-white">Lo que dicen nuestros clientes</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-gray-800 p-8 rounded-lg shadow-lg border border-gray-700">
+                        <p class="text-gray-300 italic mb-4">"AgencIA ha transformado la forma en que interactuamos con nuestros pacientes. Su chatbot es increíblemente eficiente y fácil de usar."</p>
+                        <div class="flex items-center">
+                            <img src="https://placehold.co/60x60/818cf8/ffffff?text=C1" alt="Cliente 1" class="w-12 h-12 rounded-full mr-4">
+                            <div>
+                                <p class="font-semibold text-indigo-400">Dr. Juan Pérez</p>
+                                <p class="text-sm text-gray-500">Director, Línea Médica</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-800 p-8 rounded-lg shadow-lg border border-gray-700">
+                        <p class="text-gray-300 italic mb-4">"La creatividad y velocidad de AgencIA para prototipar es asombrosa. Han dado vida a nuestras ideas de juegos educativos de IA de forma espectacular."</p>
+                        <div class="flex items-center">
+                            <img src="https://placehold.co/60x60/818cf8/ffffff?text=C2" alt="Cliente 2" class="w-12 h-12 rounded-full mr-4">
+                            <div>
+                                <p class="font-semibold text-indigo-400">María García</p>
+                                <p class="text-sm text-gray-500">Fundadora, Núcleo Colectivo</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-800 p-8 rounded-lg shadow-lg border border-gray-700">
+                        <p class="text-gray-300 italic mb-4">"Desde el diseño de la web hasta los chatbots interactivos, AgencIA ha superado nuestras expectativas. La IA ha añadido un toque único a nuestros productos."</p>
+                        <div class="flex items-center">
+                            <img src="https://placehold.co/60x60/818cf8/ffffff?text=C3" alt="Cliente 3" class="w-12 h-12 rounded-full mr-4">
+                            <div>
+                                <p class="font-semibold text-indigo-400">Carlos Rodríguez</p>
+                                <p class="text-sm text-gray-500">CEO, Cosiaca</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Nuestro Equipo -->
+        <section id="equipo" class="py-16 px-4">
+            <div class="container mx-auto">
+                <h2 class="text-4xl font-bold text-center mb-12 section-title mx-auto w-fit text-white">Nuestro Equipo</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center border border-gray-700">
+                        <img src="https://placehold.co/150x150/818cf8/ffffff?text=MP" alt="Manuel Palacio" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover">
+                        <h3 class="text-2xl font-semibold text-indigo-400 mb-2">Manuel Palacio</h3>
+                        <p class="text-gray-300 mb-4">Fundador & Visionario de <span class="gradient-text">IA</span></p>
+                        <p class="text-gray-400 text-sm">Líder creativo y técnico detrás de Núcleo Colectivo, con una pasión por la intersección entre el arte, la tecnología y la inteligencia artificial.</p>
+                    </div>
+                    <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center border border-gray-700">
+                        <img src="https://placehold.co/150x150/818cf8/ffffff?text=JD" alt="Miembro del Equipo" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover">
+                        <h3 class="text-2xl font-semibold text-indigo-400 mb-2">Juan David</h3>
+                        <p class="text-gray-300 mb-4">Especialista en Desarrollo Web</p>
+                        <p class="text-gray-400 text-sm">Experto en la creación de experiencias web fluidas y responsivas, integrando las últimas tecnologías para un rendimiento óptimo.</p>
+                    </div>
+                    <div class="bg-gray-800 p-8 rounded-lg shadow-lg text-center border border-gray-700">
+                        <img src="https://placehold.co/150x150/818cf8/ffffff?text=MM" alt="Milena Mendez" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover">
+                        <h3 class="text-2xl font-semibold text-indigo-400 mb-2">Milena Mendez</h3>
+                        <p class="text-gray-300 mb-4">Gerente de Proyectos y Alianzas</p>
+                        <p class="text-gray-400 text-sm">Estratega en la conexión de clientes con soluciones de IA, gestionando proyectos desde la conceptualización hasta la implementación exitosa.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Nosotros -->
+        <section id="nosotros" class="py-16 px-4">
+            <div class="container mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-12 section-title mx-auto w-fit text-white">Sobre Nosotros</h2>
+                <div class="max-w-4xl mx-auto text-lg text-gray-300 leading-relaxed">
+                    <p class="mb-6">
+                        En **Synerg<span class="gradient-text">IA</span>**, somos un equipo apasionado por la inteligencia artificial y su potencial para transformar los negocios. Nuestra visión es ser líderes en la creación de soluciones de IA que revolucionen la forma en que las pequeñas y medianas empresas operan y crecen.
+                    </p>
+                    <p class="mb-6">
+                        Nos dedicamos a resolver problemas reales, generando soluciones prácticas y a medida. Nuestra agilidad en el prototipado nos permite desarrollar soluciones personalizadas en tiempo récord, adaptándonos rápidamente a las necesidades específicas de cada negocio. Creemos firmemente en empoderar a nuestros clientes con tecnología de vanguardia, impulsando su crecimiento y éxito en el mundo digital.
+                    </p>
+                    <p class="font-semibold text-indigo-400">
+                        ¡Estamos aquí para llevar tu empresa al siguiente nivel con el poder de la <span class="gradient-text">IA</span>!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Contacto -->
+        <section id="contacto" class="py-16 px-4">
+            <div class="container mx-auto">
+                <h2 class="text-4xl font-bold text-center mb-12 section-title mx-auto w-fit text-white">Contáctanos</h2>
+                <div class="max-w-xl mx-auto bg-gray-800 p-8 rounded-lg shadow-lg border border-gray-700">
+                    <p class="text-center text-lg text-gray-300 mb-6">
+                        ¿Listo para transformar tu negocio con <span class="gradient-text">IA</span>? ¡Hablemos!
+                    </p>
+                    <form class="space-y-6">
+                        <div>
+                            <label for="nombre" class="block text-sm font-medium text-gray-300 mb-1">Nombre Completo</label>
+                            <input type="text" id="nombre" name="nombre" class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-700 text-white">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Correo Electrónico</label>
+                            <input type="email" id="email" name="email" class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-700 text-white">
+                        </div>
+                        <div>
+                            <label for="mensaje" class="block text-sm font-medium text-gray-300 mb-1">Mensaje</label>
+                            <textarea id="mensaje" name="mensaje" rows="4" class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-700 text-white"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300 shadow-md cta-button">
+                            Enviar Mensaje
+                        </button>
+                    </form>
+                    <div class="mt-8 text-center text-gray-400">
+                        <p class="mb-2">También puedes contactarnos directamente:</p>
+                        <p><strong>Correo:</strong> nucleo.colectivo.art@gmail.com</p>
+                        <p><strong>WhatsApp:</strong> 300 610 1221</p>
+                        <p><strong>Web:</strong> <a href="https://www.nucleocolectivo.com" target="_blank" class="text-indigo-400 hover:underline">www.nucleocolectivo.com</a> (próximamente)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8 px-4 text-center border-t border-gray-700/50">
+        <div class="container mx-auto">
+            <p>&copy; 2025 Synerg<span class="gradient-text">IA</span>. Todos los derechos reservados.</p>
+            <p class="text-sm mt-2 text-gray-400">Hecho con el poder de la <span class="gradient-text">IA</span>.</p>
+        </div>
+    </footer>
+
+    <!-- Floating Buttons Container -->
+    <div class="floating-buttons-container">
+        <button onclick="openAgencIAModal()" class="floating-button bg-indigo-600 hover:bg-indigo-700" title="Asistente General AgencIA">
+            🤖
+        </button>
+        <a href="https://wa.me/19176070533" target="_blank" class="floating-button bg-pink-500 hover:bg-pink-600" title="Contactar a Milena Mendez">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+            </svg>
+        </a>
+        <a href="https://wa.me/573006101221" target="_blank" class="floating-button bg-teal-500 hover:bg-teal-600" title="Contactar a Manuel Palacio">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- CHATBOT MODALS -->
+    <div id="mydigitaltraveler-modal-container" class="chat-modal-container fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50"></div>
+    <div id="arquitek-modal-container" class="chat-modal-container fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50"></div>
+    <div id="salesagent-modal-container" class="chat-modal-container fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50"></div>
+    <div id="nucleobot-modal-container" class="chat-modal-container fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50"></div>
+    <div id="cosiacabot-modal-container" class="chat-modal-container fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50"></div>
+    <div id="lineamedica-modal-container" class="chat-modal-container fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50"></div>
+    <div id="AgencIA-modal-container" class="chat-modal-container fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50"></div>
+
+    <script>
+        // --- Mobile Nav Logic ---
+        document.getElementById('nav-toggle').onclick = function () {
+            document.getElementById('nav-content').classList.toggle('hidden');
+        }
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+                if (window.innerWidth < 1024) {
+                    document.getElementById('nav-content').classList.add('hidden');
+                }
+            });
+        });
+
+        // --- Generic Chatbot Logic ---
+        function setupChatbot(botConfig) {
+            const modalContainer = document.getElementById(botConfig.modalId);
+            if (!modalContainer) return;
+            
+            modalContainer.innerHTML = `
+                <div class="chat-modal-panel w-full max-w-2xl bg-white rounded-lg shadow-2xl flex flex-col h-[90vh] text-slate-900">
+                    <div class="p-4 border-b border-slate-200 flex items-center justify-between" style="background-color: ${botConfig.headerColor || '#fff'}; color: ${botConfig.headerTextColor || '#000'};">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl font-bold" style="background-color: ${botConfig.iconBg || '#6366f1'}; color: ${botConfig.iconColor || '#fff'};">${botConfig.icon}</div>
+                            <div>
+                                <h1 class="text-xl font-bold">${botConfig.displayName}</h1>
+                                <p class="text-sm opacity-80">${botConfig.tagline}</p>
+                            </div>
+                        </div>
+                        <button onclick="close${botConfig.name}Modal()" class="text-slate-400 hover:text-slate-600" style="color: ${botConfig.headerTextColor || '#000'};">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
+                    <div id="${botConfig.containerId}" class="modal-chat-container flex-1 p-6 overflow-y-auto"></div>
+                    <div class="p-4 border-t border-slate-200">
+                        <div class="relative">
+                            <input type="text" id="${botConfig.inputId}" placeholder="${botConfig.placeholder}" class="w-full pl-4 pr-12 py-3 bg-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                            <button id="${botConfig.sendBtnId}" class="absolute right-2 top-1/2 -translate-y-1/2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send w-5 h-5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+
+            const chatContainer = document.getElementById(botConfig.containerId);
+            const userInput = document.getElementById(botConfig.inputId);
+            const sendButton = document.getElementById(botConfig.sendBtnId);
+            
+            let chatHistory = [];
+            let isChatInitialized = false;
+
+            window[botConfig.openFnName] = function() {
+                modalContainer.classList.remove('hidden');
+                if (!isChatInitialized) {
+                    initializeChat();
+                    isChatInitialized = true;
+                }
+            }
+
+            window[botConfig.closeFnName] = function() {
+                modalContainer.classList.add('hidden');
+            }
+
+            function initializeChat() {
+                chatContainer.innerHTML = '';
+                chatHistory = [];
+                addMessageToUI('bot', botConfig.initialFlow.start.message);
+                createInitialButtons(botConfig.initialFlow.start.buttons);
+            }
+
+            function createInitialButtons(buttons) {
+                const existingButtons = document.getElementById(`${botConfig.modalId}-initial-buttons`);
+                if(existingButtons) existingButtons.remove();
+
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.id = `${botConfig.modalId}-initial-buttons`;
+                buttonsContainer.className = 'flex flex-wrap gap-2 mt-2 justify-start';
+                buttons.forEach(text => {
+                    const button = document.createElement('button');
+                    button.className = 'action-button font-medium py-2 px-4 rounded-lg text-sm';
+                    button.textContent = text;
+                    button.addEventListener('click', () => handleButtonClick(text));
+                    buttonsContainer.appendChild(button);
+                });
+                chatContainer.appendChild(buttonsContainer);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            function handleButtonClick(buttonText) {
+                addMessageToUI('user', buttonText);
+                removeInitialButtons();
+                const botResponse = botConfig.initialFlow.responses[buttonText];
+                
+                chatHistory.push({ role: "user", parts: [{ text: buttonText }] });
+
+                if (botResponse) {
+                    setTimeout(() => {
+                        addMessageToUI('bot', botResponse);
+                        chatHistory.push({ role: "model", parts: [{ text: botResponse }] });
+                    }, 500);
+                } else {
+                    getAIResponse(buttonText);
+                }
+            }
+
+            function removeInitialButtons() {
+                const buttonsContainer = document.getElementById(`${botConfig.modalId}-initial-buttons`);
+                if (buttonsContainer) buttonsContainer.remove();
+            }
+
+            function handleSendMessage() {
+                removeInitialButtons();
+                const userText = userInput.value.trim();
+                if (userText === '') return;
+                
+                addMessageToUI('user', userText);
+                userInput.value = '';
+                getAIResponse(userText);
+            }
+
+            function addMessageToUI(sender, text) {
+                const messageWrapper = document.createElement('div');
+                messageWrapper.className = `flex mb-4 ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+                
+                const bubble = document.createElement('div');
+                bubble.className = `${sender === 'user' ? 'user-bubble' : 'bot-bubble'} rounded-lg px-4 py-3 max-w-lg shadow-sm`;
+                
+                const senderName = document.createElement('p');
+                senderName.className = 'font-semibold text-xs mb-1';
+                senderName.textContent = sender === 'user' ? 'Tú' : botConfig.displayName;
+                
+                const messageText = document.createElement('p');
+                messageText.className = 'text-sm';
+                messageText.innerHTML = text
+                    .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                    .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-indigo-600 hover:underline">$1</a>')
+                    .replace(/\n/g, '<br>');
+
+                bubble.appendChild(senderName);
+                bubble.appendChild(messageText);
+                messageWrapper.appendChild(bubble);
+                chatContainer.appendChild(messageWrapper);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            function showTypingIndicator() {
+                const typingIndicator = document.createElement('div');
+                typingIndicator.id = `${botConfig.modalId}-typing-indicator`;
+                typingIndicator.className = 'flex justify-start mb-4';
+                typingIndicator.innerHTML = `<div class="bot-bubble rounded-lg px-4 py-3 max-w-lg flex items-center space-x-2"><div class="dot-flashing"></div></div>`;
+                chatContainer.appendChild(typingIndicator);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            function removeTypingIndicator() {
+                const typingIndicator = document.getElementById(`${botConfig.modalId}-typing-indicator`);
+                if (typingIndicator) typingIndicator.remove();
+            }
+
+            async function getAIResponse(userText) {
+                showTypingIndicator();
+                
+                chatHistory.push({ role: "user", parts: [{ text: userText }] });
+
+                const payload = {
+                    contents: chatHistory,
+                    systemInstruction: {
+                        parts: [{ text: botConfig.systemPrompt }]
+                    },
+                    generationConfig: { temperature: 0.7, topP: 1.0, maxOutputTokens: 1024 }
+                };
+
+                const apiKey = ""; // Leave empty
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+
+                    const result = await response.json();
+                    let botText = "Lo siento, no pude procesar tu solicitud en este momento. 🛠️";
+
+                    if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
+                        botText = result.candidates[0].content.parts[0].text;
+                    }
+                    
+                    removeTypingIndicator();
+                    addMessageToUI('bot', botText);
+                    chatHistory.push({ role: "model", parts: [{ text: botText }] });
+
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    removeTypingIndicator();
+                    addMessageToUI('bot', "¡Ay, caramba! Parece que se me enredó la lengua. Intenta de nuevo, por favor. 😅");
+                }
+            }
+
+            sendButton.addEventListener('click', handleSendMessage);
+            userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSendMessage();
+            });
+        }
+        
+        // --- App Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Setup Chatbots
+            setupChatbot({
+                name: 'AgencIA',
+                displayName: 'AgencIA Asistente',
+                tagline: 'Tu Guía en la Plataforma',
+                icon: '🤖',
+                iconBg: '#6366f1', // indigo-500
+                modalId: 'AgencIA-modal-container',
+                containerId: 'AgencIA-chat-container',
+                inputId: 'AgencIA-user-input',
+                sendBtnId: 'AgencIA-send-button',
+                openFnName: 'openAgencIAModal',
+                closeFnName: 'closeAgencIAModal',
+                placeholder: '¿En qué puedo ayudarte?',
+                systemPrompt: "Eres AgencIA, el asistente virtual principal de la agencia. Tu propósito es dar la bienvenida a los visitantes y explicarles todo sobre la plataforma. Eres amigable, claro y muy servicial. Conoces todas las secciones del sitio: Servicios, Portafolio (con sus demos de chatbots), Equipo y la sección de contacto. Tu objetivo es ser una guía completa y resolver cualquier duda general sobre lo que ofrecemos.",
+                initialFlow: {
+                    start: {
+                        message: "¡Hola! 👋 Soy AgencIA, tu guía en esta plataforma. Estoy aquí para mostrarte cómo podemos transformar tu negocio con inteligencia artificial. ¿Qué te gustaría explorar?",
+                        buttons: ["Nuestros Servicios", "Ver Portafolio", "Conocer al Equipo", "Contacto"]
+                    },
+                    responses: {
+                        "Nuestros Servicios": "¡Excelente! Ofrecemos tres áreas principales:<br><br><b>🚀 Aplicaciones y Marketing con IA:</b><br>Chatbots, banners y webs inteligentes.<br><br><b>🏢 Creación y Asesoría Empresarial:</b><br>Logos, webs y redes sociales.<br><br><b>🎓 Talleres de Capacitación en IA:</b><br>Formación para tu equipo.<br><br>¿Te gustaría que te detalle alguna de estas áreas?",
+                        "Ver Portafolio": "Nuestro portafolio es donde la magia sucede. ✨ Allí encontrarás demos interactivas de los chatbots que hemos desarrollado. ¡Te invito a probarlos! ¿Quieres ir a la sección de portafolio ahora?",
+                        "Conocer al Equipo": "Nuestro equipo está formado por visionarios de IA, desarrolladores expertos y estrategas de proyectos. Puedes conocer a Manuel, Juan David y Milena en la sección 'Nuestro Equipo'. ¡Son geniales! 😊",
+                        "Contacto": "¡Perfecto! Puedes dejarnos un mensaje en el formulario de la sección 'Contacto' o, si prefieres, usar los botones flotantes de WhatsApp para hablar directamente con Milena o Manuel. 💬"
+                    }
+                }
+            });
+            
+            setupChatbot({
+                name: 'MyDigitalTraveler',
+                displayName: 'My Digital Traveler',
+                tagline: 'Tu Guía para una Vida Libre',
+                icon: '🌎',
+                iconBg: '#0891b2', // cyan-600
+                modalId: 'mydigitaltraveler-modal-container',
+                containerId: 'mydigitaltraveler-chat-container',
+                inputId: 'mydigitaltraveler-user-input',
+                sendBtnId: 'mydigitaltraveler-send-button',
+                openFnName: 'openMyDigitalTravelerModal',
+                closeFnName: 'closeMyDigitalTravelerModal',
+                placeholder: '¿Lista para empezar tu viaje?',
+                systemPrompt: "Eres la IA de My Digital Traveler, fundada por Milena Méndez. Tu propósito es inspirar y empoderar a mujeres latinas a construir una vida libre, conectada y próspera. Fusionas viajes, tecnología y libertad financiera. Tu tono es fresco, empoderador y cercano. Hablas de monetizar habilidades digitales, usar IA y acceder a experiencias de viaje transformadoras.",
+                initialFlow: {
+                    start: {
+                        message: "🌍✨ ¿Lista para diseñar una vida en tus propios términos? Soy tu guía en My Digital Traveler. Te ayudaré a monetizar tus pasiones, viajar por el mundo y construir tu libertad digital. ¿Qué te inspira hoy?",
+                        buttons: ["Quiero ser nómada digital", "Crecer mi marca con IA", "Planear un viaje increíble"]
+                    },
+                    responses: {
+                        "Quiero ser nómada digital": "¡Esa es la actitud! Empezar es más fácil de lo que crees. Podemos explorar cómo convertir tus habilidades en un negocio digital o qué necesitas para tu primer viaje como nómada. ¿Por dónde empezamos?",
+                        "Crecer mi marca con IA": "¡Excelente elección! La IA es tu mejor aliada. Puedo darte ideas para automatizar tu marketing, crear contenido increíble o definir tu marca personal. ¿Qué te interesa más?",
+                        "Planear un viaje increíble": "¡Amo los viajes! A través de nuestras alianzas, como con Incruises, podemos acceder a experiencias únicas. ¿Qué tipo de destino sueñas con explorar? ¿Playa, montaña, una gran ciudad?"
+                    }
+                }
+            });
+
+            setupChatbot({
+                name: 'ArquiTek',
+                displayName: 'ArquiTek Solutions',
+                tagline: 'Precisión Arquitectónica',
+                icon: '🏗️',
+                iconBg: '#ea580c', // orange-600
+                modalId: 'arquitek-modal-container',
+                containerId: 'arquitek-chat-container',
+                inputId: 'arquitek-user-input',
+                sendBtnId: 'arquitek-send-button',
+                openFnName: 'openArquiTekModal',
+                closeFnName: 'closeArquiTekModal',
+                placeholder: 'Describa su consulta...',
+                systemPrompt: "Eres un asistente técnico de ArquiTek Solutions, una firma de arquitectura de alto rendimiento. Tu tono es profesional, preciso y minimalista. Te especializas en la coordinación, fabricación e integración de sistemas arquitectónicos (fachadas, interiores, etc.) en vidrio, metal y madera. Tu objetivo es entender los requerimientos técnicos del cliente y guiarlo hacia la solución correcta.",
+                initialFlow: {
+                    start: {
+                        message: "Bienvenido a ArquiTek Solutions. Diseñamos, detallamos y entregamos sistemas arquitectónicos con excelencia. ¿Cómo podemos asistir en su próximo proyecto?",
+                        buttons: ["Sistemas de Fachadas", "Sistemas Interiores", "Soporte Técnico"]
+                    },
+                    responses: {
+                        "Sistemas de Fachadas": "Nos especializamos en muros cortina, vidrio estructural y paneles de metal y compuestos. ¿Qué tipo de sistema de fachada requiere su proyecto?",
+                        "Sistemas Interiores": "Ofrecemos soluciones a medida en divisiones de vidrio, muros móviles y barandillas personalizadas. ¿Puede darme más detalles de su necesidad?",
+                        "Soporte Técnico": "Brindamos soporte en la fase de pre-construcción, incluyendo la revisión de planos de taller, submittals y RFIs. ¿En qué área necesita asistencia?"
+                    }
+                }
+            });
+            
+            setupChatbot({
+                name: 'SalesAgent',
+                displayName: 'Agente de Ventas IA',
+                tagline: 'Tu Asistente Comercial',
+                icon: '📈',
+                iconBg: '#10b981', // emerald-500
+                modalId: 'salesagent-modal-container',
+                containerId: 'salesagent-chat-container',
+                inputId: 'salesagent-user-input',
+                sendBtnId: 'salesagent-send-button',
+                openFnName: 'openSalesAgentModal',
+                closeFnName: 'closeSalesAgentModal',
+                placeholder: '¿En qué puedo ayudarte?',
+                systemPrompt: "Eres un Agente de Ventas IA. Tu tono es profesional, amigable y muy eficiente. Tu objetivo es entender las necesidades del cliente, recomendarle el plan o producto adecuado y guiarlo hacia la compra. Eres proactivo y haces preguntas clave para calificar al cliente (ej: '¿Cuál es el tamaño de tu empresa?', '¿Qué tipo de funcionalidades buscas?').",
+                initialFlow: {
+                    start: {
+                        message: "¡Hola! 👋 Soy tu asistente de ventas virtual. Estoy aquí para ayudarte a encontrar la solución de chatbot perfecta para tu negocio. ¿Cómo puedo ayudarte hoy?",
+                        buttons: ["Ver planes y precios", "Recomiéndame un plan", "Tengo una pregunta específica"]
+                    },
+                    responses: {
+                        "Ver planes y precios": "¡Claro! Puedes ver nuestros planes detallados en la sección de precios de nuestra página. Tenemos opciones para cada tipo de negocio, desde emprendimientos hasta grandes empresas. ¿Hay algún plan en particular que te llame la atención?",
+                        "Recomiéndame un plan": "¡Por supuesto! Para darte la mejor recomendación, necesito saber un poco más sobre tu negocio. ¿Podrías contarme sobre el tamaño de tu empresa y qué tipo de interacciones te gustaría automatizar?",
+                        "Tengo una pregunta específica": "¡Excelente! Estoy para resolver todas tus dudas. Por favor, escribe tu pregunta y te responderé a la brevedad."
+                    }
+                }
+            });
+
+            setupChatbot({
+                name: 'NucleoBot',
+                displayName: 'NúcleoBot AI',
+                tagline: 'El Guardián del Núcleo',
+                icon: 'N',
+                iconBg: '#8b5cf6', // violet-500
+                modalId: 'nucleobot-modal-container',
+                containerId: 'nucleobot-chat-container',
+                inputId: 'nucleobot-user-input',
+                sendBtnId: 'nucleobot-send-button',
+                openFnName: 'openNucleoBotModal',
+                closeFnName: 'closeNucleoBotModal',
+                placeholder: 'Escribe tu mensaje...',
+                systemPrompt: "Eres NúcleoBot, un asistente de IA amigable y servicial. Tu propósito es guiar a los usuarios en proyectos creativos y comunitarios. Eres inspirador, claro y ofreces ideas estructuradas. Mantén un tono de apoyo y profesionalismo.",
+                initialFlow: {
+                    start: {
+                        message: "¡Hola! 👋 Soy NúcleoBot, tu asistente para proyectos creativos y comunitarios. ¿En qué podemos colaborar hoy?",
+                        buttons: ["¿Qué es un 'Núcleo'?", "Ayúdame a iniciar un proyecto", "Necesito inspiración"]
+                    },
+                    responses: {
+                        "¿Qué es un 'Núcleo'?": "Un 'Núcleo' es un grupo de personas unidas por un propósito común, como un colectivo artístico o una iniciativa comunitaria. Mi función es ser el 'guardián' de ese núcleo, facilitando la comunicación y la creatividad. 🤝",
+                        "Ayúdame a iniciar un proyecto": "¡Excelente! Para empezar, pensemos en la idea principal. ¿Cuál es el objetivo de tu proyecto? ¿A quién va dirigido? Descríbemelo y podemos empezar a trazar un plan de acción juntos. 📝",
+                        "Necesito inspiración": "La inspiración está en todas partes. ✨ Podríamos explorar temas como 'arte y tecnología', 'sostenibilidad urbana' o 'historias locales'. ¿Qué área te llama más la atención para empezar a generar ideas?"
+                    }
+                }
+            });
+
+            setupChatbot({
+                name: 'CosiacaBot',
+                displayName: 'CosiacaBot',
+                tagline: 'El Cuentero de Antioquia',
+                icon: '🤠',
+                iconBg: '#a855f7', // purple-500
+                modalId: 'cosiacabot-modal-container',
+                containerId: 'cosiacabot-chat-container',
+                inputId: 'cosiacabot-user-input',
+                sendBtnId: 'cosiacabot-send-button',
+                openFnName: 'openCosiacaBotModal',
+                closeFnName: 'closeCosiacaBotModal',
+                placeholder: 'Échele el cuento a Cosiaca...',
+                systemPrompt: "¡Eres CosiacaBot! Tu personalidad está basada en Cosiaca, el famoso personaje embustero, exagerado y humorista de Antioquia, Colombia. Hablas con el acento y la jerga 'paisa' (ej: 'parce', 'pues', '¿o qué?', 'avemaría', 'charro', 'qué berraquera'). Eres un cuentero, tus respuestas son chistes, trovas, anécdotas exageradas o datos históricos de Antioquia contados de forma muy pintoresca y divertida. Siempre eres amigable y buscas hacer reír al usuario. Nunca eres grosero. Mantén las respuestas cortas y al grano.",
+                initialFlow: {
+                    start: {
+                        message: "¡Ave María, pues! Llegó el que me iba a escuchar los cuentos o se arrepintió, ¿o qué? 🤠 Écheme el chisme, a ver qué se le ofrece a este servidor.",
+                        buttons: ["Contame un chiste 😂", "Tirate una trova 🎶", "Una historia de Antioquia 📜"]
+                    },
+                    responses: {
+                        "Contame un chiste 😂": "¡Hágale pues! Iba un paisa por la calle y se encontró una lámpara mágica. La frotó y ¡zaz! Salió el genio y le dijo: 'Te concedo un deseo'. Y el paisa va y le dice: '¡Nooo, qué pena con vos, ome! ¿Yo pidiéndote cosas? ¡Más bien pedí vos que estás más necesitado!' 🤣",
+                        "Tirate una trova 🎶": "¡Con gusto, mi amigo!\n\nBrindo por este aparato,\nque conversa y que saluda,\nsi usted me pide un buen dato,\n¡le respondo sin ayuda! 🎤",
+                        "Una historia de Antioquia 📜": "Claro, parce. Dicen que el mismísimo Ferrocarril de Antioquia lo construyeron a punta de arepa y aguapanela. ¡Que los rieles los pegaban con mazamorra y que los túneles los abrían a punta de gritos pa' asustar a la montaña! Una berraquera, ¿sí o qué? 🚂"
+                    }
+                }
+            });
+            
+            setupChatbot({
+                name: 'LineaMedica',
+                displayName: 'Línea Médica',
+                tagline: 'Tu Asistente de Salud Virtual',
+                icon: '⚕️',
+                iconBg: '#fff',
+                iconColor: '#014d98',
+                headerColor: '#014d98',
+                headerTextColor: '#fff',
+                modalId: 'lineamedica-modal-container',
+                containerId: 'lineamedica-chat-container',
+                inputId: 'lineamedica-user-input',
+                sendBtnId: 'lineamedica-send-button',
+                openFnName: 'openLineaMedicaModal',
+                closeFnName: 'closeLineaMedicaModal',
+                placeholder: 'Escribe tu consulta...',
+                systemPrompt: "Eres un asistente virtual para 'Línea Médica Yolombó'. Tu tono es profesional, empático y claro. Tu objetivo es ayudar a los usuarios a conocer los servicios, agendar citas y obtener información de contacto. La dirección es Carrera 20 # 19-25, Yolombó, Antioquia. El horario es L-V de 7am a 6pm y Sábados de 8am a 1pm. Para agendar, siempre debes guiar al usuario a contactar por WhatsApp o teléfono para confirmar disponibilidad.",
+                initialFlow: {
+                    start: {
+                        message: "¡Hola! 👋 Bienvenido a LÍNEA MÉDICA Yolombó. Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?",
+                        buttons: ['Agendar una cita', 'Nuestros servicios', 'Ubicación y horarios']
+                    },
+                    responses: {
+                        'Agendar una cita': '¡Con gusto te ayudo a agendar tu cita! Para poder orientarte mejor, ¿qué servicio necesitas?',
+                        'Nuestros servicios': 'Ofrecemos diagnóstico no invasivo en cardiología y neumología. ¿Sobre qué servicio necesitas más información?',
+                        'Ubicación y horarios': `¡Claro! Aquí tienes nuestra información: <br><br> <strong>📍 Dirección:</strong><br> Carrera 20 # 19-25, Yolombó, Antioquia.<br><a href="https://www.google.com/maps/search/?api=1&query=Carrera+20+%23+19-25,+Yolombó,+Antioquia" target="_blank" class="text-indigo-600 hover:underline">Ver en Google Maps</a><br><br><strong>⏰ Horarios:</strong><br>Lunes a Viernes: 7am - 6pm<br>Sábados: 8am - 1pm<br><br>¿Te puedo ayudar con algo más?`
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
